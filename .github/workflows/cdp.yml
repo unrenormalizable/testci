@@ -37,3 +37,60 @@ jobs:
           OUTPUT1: ${{needs.job1.outputs.output1}}
           OUTPUT2: ${{needs.job1.outputs.output2}}
         run: echo "$env:OUTPUT1 $env:OUTPUT2"
+
+  createbuildvars:
+    name: Create build variables
+    runs-on: windows-latest
+    outputs:
+      output1: ${{steps.step1.outputs.test}}
+      output2: ${{steps.step2.outputs.test}}
+      buildversion: ${{steps.createbuildversion.outputs.buildversion}}
+      buildcommit: ${{steps.createbuildcommit.outputs.buildcommit}}
+    steps:
+      - id: step1
+        run: echo "test=hello" >> "$GITHUB_OUTPUT"
+
+      - id: step2
+        run: echo "test=world" >> "$GITHUB_OUTPUT"
+
+      - id: createbuildversion
+        run: echo "buildversion=$(date +'%y.%m%d').${{github.run_number}}" >> "$GITHUB_OUTPUT"
+
+      - id: createbuildcommit
+        run: echo "buildcommit=${{github.sha}}" >> "$GITHUB_OUTPUT"
+
+      - name: Check created build variables
+        run: |
+          echo "Using output1 ${{needs.createbuildvars.outputs.output1}}"
+          echo "Using output2 ${{needs.createbuildvars.outputs.output2}}"
+          echo "Using version ${{needs.createbuildvars.outputs.buildversion}}"
+          echo "Using commit ${{needs.createbuildvars.outputs.buildcommit}}"
+
+  checkcreatebuildvars:
+    name: Check build variables
+    needs: createbuildvars
+    strategy:
+      matrix:
+        os:
+          - windows-latest
+    runs-on: ${{matrix.os}}
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Print build variables 1
+        run: |
+          echo "Using output1 ${{needs.createbuildvars.outputs.output1}}"
+          echo "Using output2 ${{needs.createbuildvars.outputs.output2}}"
+          echo "Using version ${{needs.createbuildvars.outputs.buildversion}}"
+          echo "Using commit ${{needs.createbuildvars.outputs.buildcommit}}"
+
+      - name: Print build variables 2
+        run: |
+          cmd /c set VITE_
+        env:
+          VITE_OUTPUT_1: ${{needs.createbuildvars.outputs.output1}}
+          VITE_OUTPUT_2: ${{needs.createbuildvars.outputs.output2}}
+          VITE_APP_VERSION: ${{needs.createbuildvars.outputs.buildversion}}
+          VITE_APP_COMMIT_ID: ${{needs.createbuildvars.outputs.buildcommit}}
+          VITE_APP_AI_INSTRUMENTATION_KEY: ${{secrets.AZURE_CREDENTIALS_KSAPPLICATIONS_AI_KEY}}
