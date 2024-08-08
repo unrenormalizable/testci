@@ -40,7 +40,7 @@ jobs:
 
   createbuildvars:
     name: Create build variables
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     outputs:
       output1: ${{steps.step1.outputs.test}}
       output2: ${{steps.step2.outputs.test}}
@@ -58,13 +58,6 @@ jobs:
 
       - id: createbuildcommit
         run: echo "buildcommit=${{github.sha}}" >> "$GITHUB_OUTPUT"
-
-      - name: Check created build variables
-        run: |
-          echo "Using output1 ${{needs.createbuildvars.outputs.output1}}"
-          echo "Using output2 ${{needs.createbuildvars.outputs.output2}}"
-          echo "Using version ${{needs.createbuildvars.outputs.buildversion}}"
-          echo "Using commit ${{needs.createbuildvars.outputs.buildcommit}}"
 
   checkcreatebuildvars:
     name: Check build variables
